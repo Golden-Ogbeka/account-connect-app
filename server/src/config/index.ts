@@ -11,5 +11,5 @@ export const config = {
       throw new Error('JWT_SECRET environment variable is required.');
     })(),
   appUrl: process.env.APP_URL || 'http://localhost',
-  corsList: ['http://localhost:5173', 'http://localhost:3000'],
+  corsList: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173'],
 };

@@ -2,6 +2,13 @@
   "name": "account-connect-app-root",
   "version": "1.0.0",
   "scripts": {
-    "prepare": "git config core.hooksPath .husky"
+    "prepare": "git config core.hooksPath .husky",
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   }
 }
