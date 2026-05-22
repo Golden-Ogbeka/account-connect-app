@@ -1,37 +1,5 @@
 # Agent Guidelines — AccountConnect App
 
-## AI Interaction Logging
-
-All AI agents interacting with this codebase must log each user prompt and the corresponding AI response in `PROMPTS.md` at the project root.
-
-### Logging Procedure
-
-After each interaction, append an entry to `PROMPTS.md` in this format:
-
-```markdown
-### Date: YYYY-MM-DD HH:MM:SS
-
-**Prompt:**
-
-[User's prompt here]
-
-**Response:**
-
-[AI's response summary here]
-
----
-```
-
-Rules:
-1. Dates must be in ISO format with time.
-2. Entries must be in chronological order — always append, never modify existing entries.
-3. Sanitize all entries — remove PII, secrets, tokens, credentials, and financial data before logging.
-4. Never log customer data, transaction details, or personally identifiable information.
-5. `PROMPTS.md` must never be exposed in production environments.
-6. All AI-generated code must be reviewed and validated before use.
-
----
-
 ## Code Style
 
 - Use TypeScript for all new files — no plain JavaScript.

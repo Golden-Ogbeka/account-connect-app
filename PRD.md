@@ -1,8 +1,8 @@
-# Product Requirements Document (PRD): AccountConnect App
+# Product Requirements Document (PRD): Account Connect App
 
 ## Overview
 
-AccountConnect is a full-stack social banking application that allows users to view and manage their account, create and reverse transactions, and connect with other users on the platform. The system simulates a personal finance and social networking platform built on a GraphQL API.
+Account Connect is a full-stack social banking application that allows users to view and manage their account, create and reverse transactions, and connect with other users on the platform. The system simulates a personal finance and social networking platform built on a GraphQL API.
 
 ---
 

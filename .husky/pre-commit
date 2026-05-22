@@ -1,3 +1,4 @@
+#!/bin/sh
 cd server
 npm run type:check
 npx lint-staged
