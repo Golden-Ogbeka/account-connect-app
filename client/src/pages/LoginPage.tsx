@@ -41,7 +41,7 @@ export const LoginPage = () => {
         <section className="hidden lg:block">
           <div className="max-w-xl space-y-6">
             <span className="inline-flex items-center rounded-full border border-cyan-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700 backdrop-blur">
-              AccountConnect
+              Account Connect
             </span>
             <h1 className="text-5xl font-semibold tracking-[-0.06em] text-slate-950">
               Social banking with a calmer, focused workspace.
@@ -54,7 +54,7 @@ export const LoginPage = () => {
 
         <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_32px_90px_-52px_rgba(15,23,42,0.5)] backdrop-blur sm:p-10">
           <div className="mb-8">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700 lg:hidden">AccountConnect</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700 lg:hidden">Account Connect</div>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-950">Sign in</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">Use your account credentials to access your workspace.</p>
           </div>

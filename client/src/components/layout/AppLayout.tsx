@@ -1,7 +1,7 @@
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import clsx from 'clsx';
 import { useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PROFILE_QUERY } from '../../graphql/operations';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../types';
@@ -20,9 +20,12 @@ export const AppLayout = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data, loading } = useQuery<{ profile: User }>(PROFILE_QUERY, { skip: !isAuthenticated });
 
+  const navigate = useNavigate();
+
   const onLogout = async () => {
     await client.clearStore();
     logout();
+    navigate('/login');
   };
 
   const displayName = data?.profile?.name ?? 'Account';
@@ -37,7 +40,7 @@ export const AppLayout = () => {
           <div className="border-b border-white/10 px-8 pb-8 pt-10">
             <Link to="/dashboard" className="inline-flex flex-col">
               <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200/80">
-                AccountConnect
+                Account Connect
               </span>
               <span className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">
                 Control center
@@ -102,7 +105,7 @@ export const AppLayout = () => {
             <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-10 lg:py-5">
               <div className="min-w-0">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 lg:hidden">
-                  AccountConnect
+                  Account Connect
                 </div>
                 <div className="mt-1 flex items-center gap-3">
                   <button
