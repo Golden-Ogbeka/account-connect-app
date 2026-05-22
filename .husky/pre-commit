@@ -1,0 +1,4 @@
+cd server
+npm run type:check
+npm test
+npx lint-staged

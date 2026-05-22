@@ -1,0 +1,7 @@
+{
+  "name": "account-connect-app-root",
+  "version": "1.0.0",
+  "scripts": {
+    "prepare": "git config core.hooksPath .husky"
+  }
+}
