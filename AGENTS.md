@@ -33,11 +33,11 @@ account-connect-app/
 │   ├── apollo/         # Apollo Client setup
 │   ├── auth/           # Token storage
 │   ├── components/     # Reusable UI components
-│   ├── context/        # React context (auth)
 │   ├── graphql/        # GraphQL operations
 │   ├── hooks/          # Custom hooks
 │   ├── lib/            # Utilities (formatting)
 │   ├── pages/          # Route-level page components
+│   ├── store/          # Redux store and slices
 │   └── types/          # Shared TypeScript types
 └── server/src/
     ├── config/         # Environment config
@@ -106,7 +106,7 @@ cd client && npm run build
 ## Compliance
 
 - Maintain audit trails for all financial transactions and user actions via Winston logs.
-- Do not log customer data, transaction details, or PII in `PROMPTS.md` or application logs.
+- Do not log customer data, transaction details, or PII in application logs.
 - Ensure AI agent activity complies with applicable data protection regulations.
 
 ---

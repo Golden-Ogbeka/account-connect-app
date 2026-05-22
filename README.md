@@ -4,10 +4,15 @@ A full-stack GraphQL application for a hypothetical social banking platform, all
 
 ---
 
+## Demo
+
+[Watch the demo on Loom](https://www.loom.com/share/eae4b457941c429bb42685c5c080d4ef)
+
+---
+
 ## Documentation
 
 - [Product Requirements (PRD)](PRD.md)
-- [AI Prompts Log](PROMPTS.md) — All AI prompts and responses are logged here for auditability.
 
 ---
 
@@ -43,8 +48,32 @@ Both projects will start in parallel. The server runs on port 8000 and the clien
 
 ```
 account-connect-app/
-├── client/         # React + Vite dashboard
-└── server/         # GraphQL API server
+├── client/src/
+│   ├── apollo/         # Apollo Client setup
+│   ├── assets/         # Static assets
+│   ├── auth/           # Token storage
+│   ├── components/     # Reusable UI components
+│   │   ├── layout/     # App shell and layout
+│   │   ├── routing/    # Protected route wrapper
+│   │   ├── transactions/ # Transaction-specific components
+│   │   └── ui/         # Generic UI primitives
+│   ├── graphql/        # GraphQL operations (operations.ts)
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utilities (formatting)
+│   ├── pages/          # Route-level page components
+│   ├── store/          # Redux store and slices
+│   └── types/          # Shared TypeScript types
+└── server/src/
+    ├── config/         # Environment config
+    ├── db/             # SQLite init and seed
+    ├── graphql/        # Schema, resolvers, auth, errors
+    │   ├── resolvers/  # Query and mutation resolvers
+    │   └── schema/     # GraphQL type definitions
+    ├── jobs/           # Background job scheduling
+    ├── middleware/      # Express middleware (logger)
+    ├── services/       # Business logic
+    ├── types/          # Shared TypeScript types
+    └── utils/          # Auth utilities, logger
 ```
 
 ---
@@ -69,7 +98,7 @@ The server seeds accounts from the SQLite database on first run. Use any of the 
 
 1. **Start the API** — Run the GraphQL server so `POST /graphql` is available.
 2. **Start the client** — Run the Vite dev server; the browser loads the React app.
-3. **Sign in** — The login screen sends the `login` GraphQL mutation with email and password. The server validates credentials, returns a JWT and user fields. The client stores the token in localStorage.
+3. **Sign in** — The login screen sends the `login` GraphQL mutation with email and password. The server validates credentials, returns a JWT and user fields. The client stores the token in localStorage and hydrates the Redux auth store.
 4. **Authenticated requests** — For every subsequent GraphQL operation, Apollo attaches `Authorization: Bearer <token>`. The server resolves the user from the JWT and scopes data to that user.
 5. **Dashboard** — The client runs the `profile` query (header) and `account` query (balance, address, description). The user can edit their address and description inline.
 6. **Transactions** — Status tabs map to the `transactions` query `status` argument. Cursor-based pagination via `limit` and `after` arguments fetches pages iteratively. Clicking "Load more" merges new data into the table.
@@ -77,7 +106,7 @@ The server seeds accounts from the SQLite database on first run. Use any of the 
 8. **Reverse a transaction** — Only `posted` rows show a Reverse button. The client opens a confirmation modal, then calls `reverseTransaction`. On success, the list refreshes and a toast confirms the change.
 9. **People** — The client runs the `users` query to list all other users. The user can follow or unfollow any of them.
 10. **Following** — The client runs the `following` query to list users the current user follows, with an unfollow option.
-11. **Sign out** — Clears the token and Apollo cache, then routes back to login.
+11. **Sign out** — Clears the token and Redux auth state, then routes back to login.
 
 If the token is missing or expired, protected operations fail with `UNAUTHENTICATED` and the client redirects to the login screen.
 
@@ -96,6 +125,7 @@ The client is a single-page application that communicates with the GraphQL API o
 | Routing | React Router v7 |
 | Styling | Tailwind CSS v4 |
 | API | Apollo Client v4 (GraphQL over HTTP) |
+| State | Redux Toolkit |
 | Notifications | Sonner (toasts) |
 
 ### Prerequisites
@@ -147,14 +177,17 @@ Vite prints a local URL (usually `http://localhost:5173`).
 
 ### Tech Stack
 
-- **Runtime:** Node.js v22+
-- **Language:** TypeScript
-- **API:** GraphQL via Apollo Server v4
-- **Framework:** Express
-- **Database:** SQLite (via `@databases/sqlite`)
-- **Authentication:** JWT (jsonwebtoken)
-- **Logging:** Winston + colors
-- **Dev Server:** nodemon + tsx
+| Layer | Choice |
+| --- | --- |
+| Runtime | Node.js v22+ |
+| Language | TypeScript |
+| API | GraphQL via Apollo Server v4 |
+| Framework | Express |
+| Database | SQLite (via `@databases/sqlite`) |
+| Authentication | JWT (`jsonwebtoken`) + `bcryptjs` |
+| Security | Helmet |
+| Logging | Winston + colors |
+| Dev Server | nodemon + tsx |
 
 ### Prerequisites
 
@@ -183,7 +216,7 @@ Vite prints a local URL (usually `http://localhost:5173`).
 
    At minimum, set `JWT_SECRET` to a long random string:
 
-   ```bash
+   ```env
    NODE_ENV=development
    PORT=8000
    APP_URL=http://localhost
@@ -203,9 +236,9 @@ The GraphQL endpoint is available at `http://localhost:8000/graphql`.
 | Variable | Required | Default | Description |
 | --- | --- | --- | --- |
 | `NODE_ENV` | No | `development` | Environment mode |
-| `PORT` | No | `5000` | Server port |
+| `PORT` | No | `8000` | Server port |
 | `APP_URL` | No | `http://localhost` | Base URL (used in logs) |
-| `JWT_SECRET` | **Yes** | — | Secret key for signing JWTs |
+| `JWT_SECRET` | **Yes** | — | Secret key for signing JWTs. Must be set — no insecure fallback. |
 
 ### Available Scripts (`server/`)
 
@@ -238,46 +271,140 @@ Obtain a token via the `login` mutation.
 
 ### Queries
 
-**`profile`** — Returns the authenticated user's profile.
+#### `profile`
+Returns the authenticated user's profile.
 
-**`account`** — Returns the authenticated user's account (balance, address, description).
+```graphql
+query {
+  profile {
+    id
+    name
+    email
+    created_at
+  }
+}
+```
 
-**`transactions`** — Returns a paginated connection of the authenticated user's transactions.
+#### `account`
+Returns the authenticated user's account details.
+
+```graphql
+query {
+  account {
+    id
+    account_number
+    account_name
+    balance
+    address
+    description
+    created_at
+  }
+}
+```
+
+#### `transactions`
+Returns a paginated connection of the authenticated user's transactions. `status` is optional — omit to return all statuses.
 
 ```graphql
 query {
   transactions(status: posted, limit: 10, after: null) {
     totalCount
-    pageInfo { hasNextPage endCursor }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
     items {
       cursor
-      transaction { id date merchant amount status }
+      transaction {
+        id
+        date
+        merchant
+        amount
+        status
+      }
     }
   }
 }
 ```
 
-**`users`** — Returns all other users with `isFollowing` flag.
+#### `users`
+Returns all other users with an `isFollowing` flag for the authenticated user.
 
-**`user(id)`** — Returns a single user with `isFollowing` flag.
+#### `user(id)`
+Returns a single user by ID with an `isFollowing` flag.
 
-**`following`** — Returns users the authenticated user follows.
+#### `following`
+Returns the list of users the authenticated user currently follows.
 
 ---
 
 ### Mutations
 
-**`login`** — Authenticates a user and returns a JWT.
+#### `login`
+Authenticates a user and returns a JWT.
 
-**`updateAccount`** — Updates the authenticated user's address and/or description.
+```graphql
+mutation {
+  login(email: "adaeze@connect.ng", password: "password123") {
+    token
+    user {
+      id
+      name
+      email
+    }
+  }
+}
+```
 
-**`createTransaction`** — Creates a new transaction (starts as `pending`, auto-posts after 2 minutes).
+#### `updateAccount`
+Updates the authenticated user's address and/or description. Both fields are optional.
 
-**`reverseTransaction`** — Reverses a `posted` transaction.
+```graphql
+mutation {
+  updateAccount(address: "123 Lagos St", description: "My account") {
+    address
+    description
+  }
+}
+```
 
-**`followUser`** — Follows another user.
+#### `createTransaction`
+Creates a new transaction. Amount must be in **kobo**. An `idempotencyKey` is required to prevent duplicate submissions.
 
-**`unfollowUser`** — Unfollows a user.
+```graphql
+mutation {
+  createTransaction(
+    merchant: "Shoprite"
+    amount: 500000
+    idempotencyKey: "uuid-here"
+  ) {
+    id
+    merchant
+    amount
+    status
+  }
+}
+```
+
+#### `reverseTransaction`
+Reverses a `posted` transaction. Only `posted` transactions can be reversed.
+
+```graphql
+mutation {
+  reverseTransaction(id: "transaction-id") {
+    id
+    status
+  }
+}
+```
+
+#### `followUser`
+Follows another user by ID. Returns the followed user.
+
+#### `unfollowUser`
+Unfollows a user by ID. Returns `true` on success.
 
 ---
 
@@ -287,7 +414,7 @@ query {
 | --- | --- |
 | `pending` | Transaction created, awaiting processing |
 | `posted` | Auto-transitions from `pending` after 2 minutes |
-| `reversed` | Transaction reversed |
+| `reversed` | Transaction reversed by the user |
 
 ---
 
@@ -298,9 +425,9 @@ query {
 | `UNAUTHENTICATED` | Missing or invalid JWT |
 | `INVALID_CREDENTIALS` | Wrong email or password |
 | `NOT_FOUND` | Resource not found |
-| `BAD_REQUEST` | Invalid operation |
+| `BAD_REQUEST` | Invalid operation (e.g. reversing a non-posted transaction) |
 | `FORBIDDEN` | Insufficient permissions |
-| `INTERNAL_SERVER_ERROR` | Unexpected server error |
+| `INTERNAL_SERVER_ERROR` | Unexpected server error (details logged server-side only) |
 
 ---
 
@@ -322,29 +449,73 @@ The server uses SQLite for persistence (development). The database is seeded wit
 
 | Table | Description |
 | --- | --- |
-| `users` | User accounts |
+| `users` | User accounts (passwords hashed with bcryptjs) |
 | `accounts` | One account per user (balance in kobo) |
 | `transactions` | User transactions |
 | `jobs` | Persisted background jobs |
-| `connections` | Follow relationships |
+| `connections` | Follow relationships (directed: follower → following) |
 
 > ⚠️ In production, replace SQLite with a proper database (e.g. PostgreSQL).
+
+### Amounts
+
+All monetary amounts are stored and transmitted in **kobo** (the smallest NGN unit). The client is responsible for formatting values to NGN currency for display (e.g. `500000 kobo` → `₦5,000.00`).
 
 ---
 
 ## Security Notes
 
 - `JWT_SECRET` must be set via environment variable — no insecure fallback
+- Passwords are hashed with `bcryptjs` — never stored or returned in plain text
 - `userId` is never exposed in GraphQL responses
 - All data is scoped to the authenticated user
-- Internal error details are never leaked to the client
+- Internal error details are never leaked to the client — logged server-side only
 - Input types are enforced at the GraphQL schema level
+- CORS is restricted to known client origins
+- HTTP security headers applied via Helmet
 
 ---
 
-## Pre-commit Hooks
+## Testing
+
+The server has a `__tests__/` directory and Jest is configured as a dev dependency, but no tests have been written yet. Unit tests for services and integration tests for resolvers are the recommended starting point.
+
+```bash
+# Run tests (server)
+cd server && npm test
+```
+
+---
+
+## Development Workflow
+
+### Pre-commit Hooks
 
 On each commit, the hook runs in `server/`:
 
-1. `npm run type:check`
-2. `lint-staged` (ESLint + Prettier on staged files)
+1. `npm run type:check` — TypeScript type checking
+2. `lint-staged` — ESLint + Prettier on staged `.ts` files and Prettier on `.json`/`.md` files
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add reverse transaction mutation
+fix: correct pagination cursor calculation
+chore: update dependencies
+```
+
+### Branching
+
+- Branch off `main` for all features and fixes
+- Merge via pull request — no direct pushes to `main`
+
+### Root Scripts
+
+| Script | Description |
+| --- | --- |
+| `npm run install:all` | Install dependencies for both client and server |
+| `npm run dev` | Run client and server concurrently |
+| `npm run dev:server` | Run server only |
+| `npm run dev:client` | Run client only |
