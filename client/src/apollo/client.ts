@@ -1,16 +1,19 @@
-import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, from } from '@apollo/client/core';
+import { ApolloClient, HttpLink, InMemoryCache, from } from '@apollo/client/core';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
+import { setContext } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
 import { getToken, removeToken } from '../auth/storage';
 
 const httpLink = new HttpLink({ uri: import.meta.env.VITE_GRAPHQL_URL });
 
-const authLink = new ApolloLink((operation, forward) => {
+const authLink = setContext((_, { headers }) => {
   const token = getToken();
-  operation.setContext({
-    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-  });
-  return forward(operation);
+  return {
+    headers: {
+      ...headers,
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+  };
 });
 
 const errorLink = new ErrorLink(({ error }) => {
@@ -19,6 +22,7 @@ const errorLink = new ErrorLink(({ error }) => {
     error.errors.some((e) => e.extensions?.code === 'UNAUTHENTICATED')
   ) {
     removeToken();
+    sessionStorage.setItem('session_expired', '1');
     window.location.href = '/login';
   }
 });

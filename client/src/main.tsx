@@ -1,22 +1,26 @@
 import { ApolloProvider } from '@apollo/client/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { apolloClient } from './apollo/client';
 import App from './App';
-import { AuthProvider } from './context/AuthContext';
 import './index.css';
+import { store } from './store';
 
-createRoot(document.getElementById('root')!).render(
+const rootEl = document.getElementById('root');
+if (!rootEl) throw new Error('Root element #root not found');
+
+createRoot(rootEl).render(
   <StrictMode>
-    <ApolloProvider client={apolloClient}>
-      <BrowserRouter>
-        <AuthProvider>
+    <Provider store={store}>
+      <ApolloProvider client={apolloClient}>
+        <BrowserRouter>
+          <Toaster richColors closeButton position="top-right" />
           <App />
-          <Toaster position="top-right" richColors />
-        </AuthProvider>
-      </BrowserRouter>
-    </ApolloProvider>
+        </BrowserRouter>
+      </ApolloProvider>
+    </Provider>
   </StrictMode>,
 );
