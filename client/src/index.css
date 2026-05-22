@@ -1,1 +1,29 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Avenir Next', Montserrat, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans',
+    'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+  --color-accent: oklch(0.5 0.09 215);
+  --color-accent-muted: oklch(0.97 0.01 220);
+}
+
+@layer base {
+  html {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  body {
+    @apply min-h-screen font-sans;
+  }
+
+  body,
+  #root {
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: rgba(8, 145, 178, 0.18);
+    color: #0f172a;
+  }
+}

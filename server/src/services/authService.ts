@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import db, { sql } from '../db';
 import { internalError, invalidCredentialsError, notFoundError } from '../graphql/errors';
 import { User } from '../types';
@@ -34,6 +35,8 @@ export const getAllUsersService = async (excludeUserId: string): Promise<User[]>
 
 export const authenticateUserService = async (email: string, password: string): Promise<User> => {
   const user = await getUserByEmailService(email);
-  if (!user || user.password !== password) throw invalidCredentialsError();
+  if (!user) throw invalidCredentialsError();
+  const valid = await bcrypt.compare(password, user.password ?? '');
+  if (!valid) throw invalidCredentialsError();
   return user;
 };

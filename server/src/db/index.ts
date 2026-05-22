@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import connect, { sql } from '@databases/sqlite';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -89,8 +90,9 @@ const seedDb = async (): Promise<void> => {
   ];
 
   for (const user of users) {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
     await db.query(
-      sql`INSERT INTO users (id, name, email, password) VALUES (${user.id}, ${user.name}, ${user.email}, ${user.password})`,
+      sql`INSERT INTO users (id, name, email, password) VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})`,
     );
     const accountId = uuidv4();
     const accountNumber = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join('');
