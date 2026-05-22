@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/routing/ProtectedRoute';
 import { DashboardPage } from './pages/DashboardPage';
 import { FollowingPage } from './pages/FollowingPage';
@@ -11,10 +12,12 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/transactions" element={<TransactionsPage />} />
-        <Route path="/people" element={<PeoplePage />} />
-        <Route path="/following" element={<FollowingPage />} />
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/transactions" element={<TransactionsPage />} />
+          <Route path="/people" element={<PeoplePage />} />
+          <Route path="/following" element={<FollowingPage />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
